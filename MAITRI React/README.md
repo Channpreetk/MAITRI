@@ -109,7 +109,7 @@ src/
 - Feature overview cards
 - Responsive design for all devices
 
-### AI Chatbot (Priya)
+### AI Chatbot (Maitri)
 - Intelligent responses based on user input
 - Pre-defined quick actions for common queries
 - Message history and typing indicators

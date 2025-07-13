@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Community = () => {
   const [posts, setPosts] = useState([
@@ -61,8 +61,27 @@ const Community = () => {
 
   const [showNewPostForm, setShowNewPostForm] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [openDropdown, setOpenDropdown] = useState(null)
+  const [showComments, setShowComments] = useState({})
+  const [commentText, setCommentText] = useState({})
+  const [postComments, setPostComments] = useState({})
+  const [likedPosts, setLikedPosts] = useState(new Set())
 
   const categories = ['All', 'Home Remedies', 'Support', 'Wellness Tips', 'Nutrition', 'Mental Health', 'Exercise']
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown !== null && !event.target.closest('.position-relative')) {
+        setOpenDropdown(null)
+      }
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => {
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [openDropdown])
 
   const filteredPosts = selectedCategory === 'All' 
     ? posts 
@@ -90,11 +109,102 @@ const Community = () => {
   }
 
   const handleLike = (postId) => {
-    setPosts(posts.map(post => 
-      post.id === postId 
-        ? { ...post, likes: post.likes + 1 }
-        : post
-    ))
+    if (likedPosts.has(postId)) {
+      // User already liked this post, so unlike it
+      setLikedPosts(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(postId)
+        return newSet
+      })
+      setPosts(posts.map(post => 
+        post.id === postId 
+          ? { ...post, likes: post.likes - 1 }
+          : post
+      ))
+    } else {
+      // User hasn't liked this post yet, so like it
+      setLikedPosts(prev => new Set([...prev, postId]))
+      setPosts(posts.map(post => 
+        post.id === postId 
+          ? { ...post, likes: post.likes + 1 }
+          : post
+      ))
+    }
+  }
+
+  const handleDelete = (postId) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      setPosts(posts.filter(post => post.id !== postId))
+    }
+  }
+
+  const toggleDropdown = (postId) => {
+    setOpenDropdown(openDropdown === postId ? null : postId)
+  }
+
+  const handleReport = (postId) => {
+    alert(`Post reported. Thank you for helping keep our community safe!`)
+    setOpenDropdown(null)
+  }
+
+  const handleSave = (postId) => {
+    alert(`Post saved to your bookmarks!`)
+    setOpenDropdown(null)
+  }
+
+  const handleComment = (postId) => {
+    setShowComments(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }))
+  }
+
+  const handleShare = (postId) => {
+    const post = posts.find(p => p.id === postId)
+    if (navigator.share) {
+      navigator.share({
+        title: post.title,
+        text: post.content,
+        url: window.location.href
+      }).catch(console.error)
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(`${post.title}\n\n${post.content}\n\nShared from Maitri Community: ${window.location.href}`)
+        .then(() => alert('Post copied to clipboard!'))
+        .catch(() => alert('Unable to share. Please copy the URL manually.'))
+    }
+  }
+
+  const handlePostComment = (postId) => {
+    const comment = commentText[postId]?.trim()
+    if (comment) {
+      // Add the new comment to the post's comment list
+      const newComment = {
+        id: Date.now(), // Simple ID generation
+        author: 'You',
+        avatar: 'Y',
+        content: comment,
+        time: 'Just now'
+      }
+      
+      setPostComments(prev => ({
+        ...prev,
+        [postId]: [...(prev[postId] || []), newComment]
+      }))
+      
+      // Update the comments count for the post
+      setPosts(posts.map(post => 
+        post.id === postId 
+          ? { ...post, comments: post.comments + 1 }
+          : post
+      ))
+      
+      // Clear the comment text
+      setCommentText(prev => ({
+        ...prev,
+        [postId]: ''
+      }))
+    }
   }
 
   const getCategoryColor = (category) => {
@@ -114,7 +224,7 @@ const Community = () => {
       {/* Header Section */}
       <section className="hero-section community-hero">
         <div className="container-fluid">
-          <div className="text-center">
+          <div className="text-center" style={{paddingTop: '40px'}}>
             <h1 className="display-4 fw-bold mb-4">Women's <span className="text-pink">Community</span></h1>
             <p className="lead">Share experiences and home remedies with other women</p>
           </div>
@@ -308,14 +418,40 @@ const Community = () => {
                           </div>
                           <small className="text-muted">{post.time}</small>
                         </div>
-                        <div className="dropdown">
-                          <button className="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                            <i className="fas fa-ellipsis-h"></i>
-                          </button>
-                          <ul className="dropdown-menu">
-                            <li><a className="dropdown-item" href="#"><i className="fas fa-flag me-2"></i>Report</a></li>
-                            <li><a className="dropdown-item" href="#"><i className="fas fa-bookmark me-2"></i>Save</a></li>
-                          </ul>
+                        <div className="d-flex align-items-center gap-2">
+                          {post.author === 'You' && (
+                            <button 
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDelete(post.id)}
+                              title="Delete post"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          )}
+                          <div className="position-relative">
+                            <button 
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => toggleDropdown(post.id)}
+                            >
+                              <i className="fas fa-ellipsis-h"></i>
+                            </button>
+                            {openDropdown === post.id && (
+                              <div className="dropdown-menu show position-absolute" style={{right: 0, top: '100%', zIndex: 1000}}>
+                                <button 
+                                  className="dropdown-item" 
+                                  onClick={() => handleReport(post.id)}
+                                >
+                                  <i className="fas fa-flag me-2"></i>Report
+                                </button>
+                                <button 
+                                  className="dropdown-item" 
+                                  onClick={() => handleSave(post.id)}
+                                >
+                                  <i className="fas fa-bookmark me-2"></i>Save
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -338,17 +474,23 @@ const Community = () => {
                       <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex gap-3">
                           <button 
-                            className="btn btn-sm btn-outline-primary"
+                            className={`btn btn-sm ${likedPosts.has(post.id) ? 'btn-primary' : 'btn-outline-primary'}`}
                             onClick={() => handleLike(post.id)}
                           >
-                            <i className="fas fa-heart me-1"></i>
+                            <i className={`fas fa-heart me-1 ${likedPosts.has(post.id) ? 'text-white' : ''}`}></i>
                             {post.likes}
                           </button>
-                          <button className="btn btn-sm btn-outline-primary">
+                          <button 
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleComment(post.id)}
+                          >
                             <i className="fas fa-comment me-1"></i>
                             {post.comments}
                           </button>
-                          <button className="btn btn-sm btn-outline-primary">
+                          <button 
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={() => handleShare(post.id)}
+                          >
                             <i className="fas fa-share me-1"></i>
                             Share
                           </button>
@@ -357,6 +499,85 @@ const Community = () => {
                           <i className="fas fa-bookmark"></i>
                         </button>
                       </div>
+
+                      {/* Comments Section */}
+                      {showComments[post.id] && (
+                        <div className="mt-3 pt-3 border-top">
+                          <h6 className="mb-3">Comments</h6>
+                          <div className="mb-3">
+                            <div className="d-flex mb-2">
+                              <div className="avatar-circle me-2" style={{width: '32px', height: '32px', fontSize: '0.8rem'}}>
+                                U
+                              </div>
+                              <div className="flex-grow-1">
+                                <textarea 
+                                  className="form-control form-control-sm" 
+                                  rows="2" 
+                                  placeholder="Write a comment..."
+                                  value={commentText[post.id] || ''}
+                                  onChange={(e) => setCommentText(prev => ({
+                                    ...prev,
+                                    [post.id]: e.target.value
+                                  }))}
+                                ></textarea>
+                              </div>
+                            </div>
+                            <div className="text-end">
+                              <button 
+                                className="btn btn-sm btn-primary"
+                                onClick={() => handlePostComment(post.id)}
+                                disabled={!commentText[post.id]?.trim()}
+                              >
+                                <i className="fas fa-paper-plane me-1"></i>
+                                Comment
+                              </button>
+                            </div>
+                          </div>
+                          <div className="comments-list">
+                            {/* User's new comments */}
+                            {postComments[post.id]?.map(comment => (
+                              <div key={comment.id} className="d-flex mb-2">
+                                <div className="avatar-circle me-2" style={{width: '32px', height: '32px', fontSize: '0.8rem'}}>
+                                  {comment.avatar}
+                                </div>
+                                <div className="flex-grow-1">
+                                  <div className="bg-light p-2 rounded">
+                                    <small className="fw-bold">{comment.author}</small>
+                                    <p className="mb-0 small">{comment.content}</p>
+                                  </div>
+                                  <small className="text-muted">{comment.time}</small>
+                                </div>
+                              </div>
+                            ))}
+                            
+                            {/* Existing sample comments */}
+                            <div className="d-flex mb-2">
+                              <div className="avatar-circle me-2" style={{width: '32px', height: '32px', fontSize: '0.8rem'}}>
+                                JS
+                              </div>
+                              <div className="flex-grow-1">
+                                <div className="bg-light p-2 rounded">
+                                  <small className="fw-bold">Jane S.</small>
+                                  <p className="mb-0 small">Thank you for sharing this! I'll definitely try it.</p>
+                                </div>
+                                <small className="text-muted">2 minutes ago</small>
+                              </div>
+                            </div>
+                            <div className="d-flex mb-2">
+                              <div className="avatar-circle me-2" style={{width: '32px', height: '32px', fontSize: '0.8rem'}}>
+                                A
+                              </div>
+                              <div className="flex-grow-1">
+                                <div className="bg-light p-2 rounded">
+                                  <small className="fw-bold">Anonymous</small>
+                                  <p className="mb-0 small">This really helped me too. Natural remedies are the best!</p>
+                                </div>
+                                <small className="text-muted">5 minutes ago</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

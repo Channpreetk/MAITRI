@@ -4,7 +4,8 @@ import '@fortawesome/fontawesome-free/css/all.min.css'
 import './App.css'
 
 // Import components
-import Navbar from './components/Navbar'
+import HomeNavbar from './components/HomeNavbar'
+import NavigationNavbar from './components/NavigationNavbar'
 import Home from './components/Home'
 import Chatbot from './components/Chatbot'
 import DietPlanner from './components/DietPlanner'
@@ -13,14 +14,20 @@ import Community from './components/Community'
 import Login from './components/Login'
 import Footer from './components/Footer'
 
+// Import UserContext
+import { UserProvider } from './context/UserContext'
+
 function AppContent() {
   const location = useLocation()
   const hiddenFooterRoutes = ['/chatbot']
   const shouldHideFooter = hiddenFooterRoutes.includes(location.pathname)
+  
+  // Use HomeNavbar for home page, NavigationNavbar for all other pages
+  const isHomePage = location.pathname === '/' || location.pathname === '/home'
 
   return (
     <div className="App">
-      <Navbar />
+      {isHomePage ? <HomeNavbar /> : <NavigationNavbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
@@ -38,7 +45,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <UserProvider>
+        <AppContent />
+      </UserProvider>
     </Router>
   )
 }

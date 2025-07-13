@@ -56,6 +56,19 @@ body {
     color: white !important;
 }
 
+/* Compact Button Styles */
+.btn-compact {
+    padding: 10px 24px !important;
+    font-size: 0.95rem !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
 /* Navigation */
 .transparent-navbar {
     background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%) !important;
@@ -66,6 +79,11 @@ body {
     margin-bottom: 0;
     padding-bottom: 0;
     z-index: 1030;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
 }
 
 .navbar.transparent-navbar.scrolled {
@@ -155,14 +173,93 @@ body {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
+/* Mobile Navbar Collapse Styles */
+.navbar-collapse {
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+}
+
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        right: 15px;
+        left: auto;
+        width: 250px;
+        z-index: 1000;
+        background: var(--primary-color) !important;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(233, 30, 99, 0.4);
+    }
+    
+    .navbar-nav {
+        padding: 10px 0;
+    }
+    
+    .nav-link {
+        color: white !important;
+        padding: 10px 15px !important;
+        border-radius: 5px;
+        margin: 2px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-link:hover,
+    .nav-link.active {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+    
+    .dropdown-menu {
+        background: rgba(233, 30, 99, 0.95) !important;
+        border: none;
+        margin-top: 5px;
+    }
+    
+    .dropdown-item {
+        color: white !important;
+        padding: 8px 15px;
+    }
+    
+    .dropdown-item:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+    }
+}
+
+/* Prevent navbar duplication - ensure only one navbar is visible */
+.App .navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1030 !important;
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
+}
+
+/* Ensure no duplicate navbars */
+.App .navbar + .navbar {
+    display: none !important;
+}
+
+/* Force content below navbar */
+.hero-content {
+    margin-top: 0px !important;
+    padding-top: 0px !important;
+}
+
 /* Hero Section */
 .hero-section {
     background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
-    min-height: 100vh;
+    min-height: 70vh;
     display: flex;
     align-items: center;
     margin-top: 0;
-    padding-top: 76px;
+    padding-top: 60px;
     width: 100vw;
     margin-left: calc(-50vw + 50%);
     margin-right: calc(-50vw + 50%);
@@ -1026,8 +1123,10 @@ footer {
 /* Responsive Design */
 @media (max-width: 768px) {
     .hero-section {
-        padding: 40px 0;
+        padding: 120px 0 40px 0;
         text-align: center;
+        align-items: flex-start;
+        padding-top: 120px;
     }
     
     .hero-section h1 {
@@ -1466,9 +1565,16 @@ section, div[class*="section"] {
 }
 
 /* Navbar height calculation fix */
-.navbar.fixed-top {
-    height: 76px;
-    min-height: 76px;
+.navbar.fixed-top, .navbar.transparent-navbar {
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 1030 !important;
 }
 
 /* Ensure chat container starts exactly below navbar */

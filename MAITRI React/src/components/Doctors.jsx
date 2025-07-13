@@ -6,6 +6,8 @@ const Doctors = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSpecialization, setSelectedSpecialization] = useState('')
   const [selectedLocation, setSelectedLocation] = useState('')
+  const [sortByRating, setSortByRating] = useState(false)
+  const [likedDoctors, setLikedDoctors] = useState([])
 
   // Sample doctors data
   const doctors = [
@@ -25,6 +27,20 @@ const Doctors = () => {
     },
     {
       id: 2,
+      name: 'Dr. Rajesh Kumar',
+      specialization: 'General Physician',
+      experience: '10 years',
+      rating: 4.6,
+      location: 'Delhi',
+      price: '₹500',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=RK',
+      availability: 'Available Today',
+      languages: ['English', 'Hindi'],
+      education: 'MBBS, MD (Internal Medicine)',
+      about: 'Experienced general physician with expertise in preventive healthcare and chronic disease management.'
+    },
+    {
+      id: 3,
       name: 'Dr. Anita Patel',
       specialization: 'Dermatologist',
       experience: '8 years',
@@ -38,7 +54,21 @@ const Doctors = () => {
       about: 'Expert in skin care and cosmetic dermatology for women of all ages.'
     },
     {
-      id: 3,
+      id: 4,
+      name: 'Dr. Amit Singh',
+      specialization: 'Endocrinologist',
+      experience: '14 years',
+      rating: 4.9,
+      location: 'Bangalore',
+      price: '₹750',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=AS',
+      availability: 'Available Today',
+      languages: ['English', 'Hindi', 'Kannada'],
+      education: 'MBBS, MD (Endocrinology)',
+      about: 'Specialist in diabetes, thyroid disorders, and hormonal imbalances with 14+ years of experience.'
+    },
+    {
+      id: 5,
       name: 'Dr. Kavitha Reddy',
       specialization: 'Nutritionist',
       experience: '6 years',
@@ -52,7 +82,21 @@ const Doctors = () => {
       about: 'Specialized in women\'s nutrition and therapeutic diet planning.'
     },
     {
-      id: 4,
+      id: 6,
+      name: 'Dr. Suresh Patel',
+      specialization: 'Psychiatrist',
+      experience: '16 years',
+      rating: 4.8,
+      location: 'Mumbai',
+      price: '₹900',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=SP',
+      availability: 'Available Tomorrow',
+      languages: ['English', 'Hindi', 'Gujarati'],
+      education: 'MBBS, MD (Psychiatry)',
+      about: 'Mental health specialist with extensive experience in anxiety, depression, and stress management.'
+    },
+    {
+      id: 7,
       name: 'Dr. Meera Singh',
       specialization: 'Psychiatrist',
       experience: '10 years',
@@ -66,7 +110,21 @@ const Doctors = () => {
       about: 'Mental health specialist focusing on women\'s psychological well-being.'
     },
     {
-      id: 5,
+      id: 8,
+      name: 'Dr. Vikram Joshi',
+      specialization: 'Dermatologist',
+      experience: '11 years',
+      rating: 4.7,
+      location: 'Pune',
+      price: '₹650',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=VJ',
+      availability: 'Available Today',
+      languages: ['English', 'Hindi', 'Marathi'],
+      education: 'MBBS, MD (Dermatology)',
+      about: 'Skin specialist focusing on acne treatment, anti-aging therapies, and cosmetic procedures.'
+    },
+    {
+      id: 9,
       name: 'Dr. Rashni Gupta',
       specialization: 'General Physician',
       experience: '15 years',
@@ -80,7 +138,21 @@ const Doctors = () => {
       about: 'Primary care physician with extensive experience in women\'s health.'
     },
     {
-      id: 6,
+      id: 10,
+      name: 'Dr. Arjun Reddy',
+      specialization: 'Nutritionist',
+      experience: '8 years',
+      rating: 4.6,
+      location: 'Hyderabad',
+      price: '₹550',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=AR',
+      availability: 'Available Today',
+      languages: ['English', 'Telugu', 'Hindi'],
+      education: 'MSc (Nutrition), Certified Sports Nutritionist',
+      about: 'Sports and clinical nutritionist specializing in weight management and metabolic health.'
+    },
+    {
+      id: 11,
       name: 'Dr. Sunita Joshi',
       specialization: 'Endocrinologist',
       experience: '9 years',
@@ -92,6 +164,20 @@ const Doctors = () => {
       languages: ['English', 'Hindi', 'Telugu'],
       education: 'MBBS, MD (Endocrinology)',
       about: 'Hormone specialist treating PCOS, thyroid, and diabetes in women.'
+    },
+    {
+      id: 12,
+      name: 'Dr. Kiran Sharma',
+      specialization: 'Gynecologist',
+      experience: '13 years',
+      rating: 4.8,
+      location: 'Chennai',
+      price: '₹850',
+      image: 'https://via.placeholder.com/150x150/2196f3/ffffff?text=KS',
+      availability: 'Available Tomorrow',
+      languages: ['English', 'Hindi', 'Tamil'],
+      education: 'MBBS, MD (Obstetrics & Gynecology)',
+      about: 'Experienced gynecologist specializing in high-risk pregnancies and minimally invasive surgery.'
     }
   ]
 
@@ -128,6 +214,23 @@ const Doctors = () => {
     return matchesSearch && matchesSpecialization && matchesLocation
   })
 
+  // Sort doctors by rating if sorting is enabled
+  const sortedDoctors = sortByRating 
+    ? [...filteredDoctors].sort((a, b) => b.rating - a.rating)
+    : filteredDoctors
+
+  const handleSortByRating = () => {
+    setSortByRating(!sortByRating)
+  }
+
+  const handleLikeDoctor = (doctorId) => {
+    setLikedDoctors(prev => 
+      prev.includes(doctorId) 
+        ? prev.filter(id => id !== doctorId)
+        : [...prev, doctorId]
+    )
+  }
+
   const handleBookConsultation = (doctor) => {
     alert(`Booking consultation with ${doctor.name}. This feature will be available soon!`)
   }
@@ -137,7 +240,7 @@ const Doctors = () => {
       {/* Header Section */}
       <section className="hero-section doctors-hero">
         <div className="container-fluid">
-          <div className="text-center">
+          <div className="text-center" style={{ marginTop: '40px' }}>
             <h1 className="display-4 fw-bold mb-4">Find <span className="text-pink">Doctors</span></h1>
             <p className="lead">Connect with qualified healthcare professionals</p>
           </div>
@@ -203,13 +306,14 @@ const Doctors = () => {
           <div className="row">
             <div className="col-12">
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h3>Available Doctors ({filteredDoctors.length})</h3>
+                <h3>Available Doctors ({sortedDoctors.length})</h3>
                 <div className="d-flex gap-2">
-                  <button className="btn btn-outline-secondary btn-sm">
-                    <i className="fas fa-filter me-2"></i>Filters
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm">
-                    <i className="fas fa-sort me-2"></i>Sort by Rating
+                  <button 
+                    className={`btn btn-sm ${sortByRating ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={handleSortByRating}
+                  >
+                    <i className="fas fa-sort me-2"></i>
+                    {sortByRating ? 'Sorted by Rating' : 'Sort by Rating'}
                   </button>
                 </div>
               </div>
@@ -217,7 +321,7 @@ const Doctors = () => {
           </div>
 
           <div className="row g-4">
-            {filteredDoctors.map(doctor => (
+            {sortedDoctors.map(doctor => (
               <div key={doctor.id} className="col-lg-6 col-xl-4">
                 <div className="doctor-card h-100">
                   <div className="card-header d-flex align-items-center">
@@ -282,8 +386,12 @@ const Doctors = () => {
                         <i className="fas fa-video me-2"></i>
                         Book Consultation
                       </button>
-                      <button className="btn btn-outline-primary">
-                        <i className="fas fa-heart"></i>
+                      <button 
+                        className={`btn ${likedDoctors.includes(doctor.id) ? 'btn-primary' : 'btn-outline-primary'}`}
+                        onClick={() => handleLikeDoctor(doctor.id)}
+                        title={likedDoctors.includes(doctor.id) ? 'Unlike doctor' : 'Like doctor'}
+                      >
+                        <i className={`fas fa-heart ${likedDoctors.includes(doctor.id) ? 'text-white' : ''}`}></i>
                       </button>
                       <button className="btn btn-outline-primary">
                         <i className="fas fa-share"></i>
@@ -295,7 +403,7 @@ const Doctors = () => {
             ))}
           </div>
 
-          {filteredDoctors.length === 0 && (
+          {sortedDoctors.length === 0 && (
             <div className="text-center py-5">
               <i className="fas fa-search fa-3x text-muted mb-3"></i>
               <h4>No doctors found</h4>

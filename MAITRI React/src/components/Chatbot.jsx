@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
+import { useUser } from '../context/UserContext'
 
 const Chatbot = () => {
+  const { user } = useUser()
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hi there! I'm Priya, your personal wellness companion. 🌸\n\nI'm here to help you with:\n• Health and wellness advice\n• Symptom guidance\n• Nutrition recommendations\n• Mental health support\n\nHow can I assist you today?",
+      text: "Hi there! I'm Maitri, your personal wellness companion. 🌸\n\nI'm here to help you with:\n• Health and wellness advice\n• Symptom guidance\n• Nutrition recommendations\n• Mental health support\n\nHow can I assist you today?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -107,7 +109,7 @@ const Chatbot = () => {
     if (window.confirm('Are you sure you want to clear the chat? This action cannot be undone.')) {
       setMessages([{
         id: 1,
-        text: "Hi there! I'm Priya, your personal wellness companion. 🌸\n\nHow can I assist you today?",
+        text: "Hi there! I'm Maitri, your personal wellness companion. 🌸\n\nHow can I assist you today?",
         sender: 'bot',
         timestamp: new Date()
       }])
@@ -121,15 +123,15 @@ const Chatbot = () => {
   }
 
   return (
-    <div className="container-fluid chat-container">
-      <div className="row h-100">
+    <div className="chat-container" style={{width: '100vw', margin: 0, padding: 0}}>
+      <div className="row h-100" style={{margin: 0}}>
         {/* Chat Sidebar */}
-        <div className="col-md-3 chat-sidebar">
+        <div className="col-md-3 chat-sidebar" style={{backgroundColor: '#ffc0cb', padding: '20px', margin: 0}}>
           <div className="sidebar-header">
             <div className="ai-avatar">
               <i className="fas fa-robot fa-2x text-pink"></i>
             </div>
-            <h5>Priya</h5>
+            <h5>Maitri</h5>
             <p className="text-muted">Your AI Wellness Companion</p>
           </div>
           
@@ -165,27 +167,65 @@ const Chatbot = () => {
         </div>
 
         {/* Chat Main Area */}
-        <div className="col-md-9 chat-main">
-          <div className="chat-header">
+        <div className="col-md-9 chat-main" style={{padding: 0, margin: 0}}>
+          <div className="chat-header d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
               <div className="status-indicator online"></div>
-              <h5 className="mb-0 ms-2">Chat with Priya</h5>
+              <h5 className="mb-0 ms-2">Chat with Maitri</h5>
             </div>
             <button className="btn btn-outline-secondary btn-sm" onClick={clearChat}>
               <i className="fas fa-trash me-2"></i>Clear Chat
             </button>
           </div>
 
-          <div className="chat-messages" id="chatMessages">
+          <div className="chat-messages" id="chatMessages" style={{
+            height: 'calc(100vh - 200px)', 
+            overflowY: 'auto', 
+            padding: '15px',
+            border: '1px solid #e0e0e0',
+            borderRadius: '8px',
+            backgroundColor: '#f9f9f9',
+            marginBottom: '80px'
+          }}>
             {messages.map((message) => (
               <div key={message.id} className={`message ${message.sender}-message`}>
                 <div className="message-avatar">
-                  <i className={`fas ${message.sender === 'user' ? 'fa-user' : 'fa-robot'} ${message.sender === 'bot' ? 'text-pink' : ''}`}></i>
+                  {message.sender === 'user' ? (
+                    <div className="user-logo" style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ffc0cb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '16px'
+                    }}>
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  ) : (
+                    <div className="bot-logo" style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ffc0cb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#333',
+                      fontWeight: 'bold',
+                      fontSize: '16px'
+                    }}>
+                      M
+                    </div>
+                  )}
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
                     {message.text.split('\n').map((line, index) => (
-                      <p key={index}>{line}</p>
+                      <div key={index}>{line}</div>
                     ))}
                   </div>
                   <span className="message-time">
@@ -197,7 +237,20 @@ const Chatbot = () => {
             {isTyping && (
               <div className="message bot-message">
                 <div className="message-avatar">
-                  <i className="fas fa-robot text-pink"></i>
+                  <div className="bot-logo" style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ffc0cb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#333',
+                    fontWeight: 'bold',
+                    fontSize: '16px'
+                  }}>
+                    M
+                  </div>
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
@@ -213,7 +266,16 @@ const Chatbot = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="chat-input-container">
+          <div className="chat-input-container" style={{
+            position: 'fixed',
+            bottom: 0,
+            right: 0,
+            left: '25%',
+            backgroundColor: 'white',
+            padding: '15px',
+            borderTop: '1px solid #e0e0e0',
+            zIndex: 1000
+          }}>
             <div className="input-group">
               <input 
                 type="text" 
@@ -221,7 +283,7 @@ const Chatbot = () => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Type your message to Priya..."
+                placeholder="Type your message to Maitri..."
               />
               <button className="btn btn-primary" type="button" onClick={sendMessage}>
                 <i className="fas fa-paper-plane"></i>
@@ -230,7 +292,7 @@ const Chatbot = () => {
             {isTyping && (
               <div className="typing-indicator-text">
                 <small className="text-muted">
-                  <i className="fas fa-robot me-1"></i>Priya is typing...
+                  <i className="fas fa-robot me-1"></i>Maitri is typing...
                 </small>
               </div>
             )}

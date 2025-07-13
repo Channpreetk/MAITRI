@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '../context/UserContext'
 
 const Login = () => {
   const navigate = useNavigate()
+  const { login, signup } = useUser()
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     email: '',
@@ -26,14 +28,29 @@ const Login = () => {
     if (isLogin) {
       // Login logic
       if (formData.email && formData.password) {
-        alert('Login successful! Welcome to Maitri.')
+        // In a real app, you would validate credentials with a backend
+        const userData = {
+          email: formData.email,
+          name: 'User', // In real app, this would come from backend
+          id: Date.now() // Simple ID generation
+        }
+        login(userData)
+        alert('Login successful! Welcome back to Maitri.')
         navigate('/home')
       }
     } else {
       // Registration logic
       if (formData.email && formData.password && formData.name && 
           formData.password === formData.confirmPassword && formData.agreeToTerms) {
-        alert('Registration successful! Welcome to Maitri.')
+        const userData = {
+          email: formData.email,
+          name: formData.name,
+          age: formData.age,
+          id: Date.now(),
+          joinedDate: new Date().toISOString()
+        }
+        signup(userData)
+        alert(`Registration successful! Welcome to Maitri, ${formData.name}!`)
         navigate('/home')
       }
     }
@@ -52,12 +69,13 @@ const Login = () => {
   }
 
   return (
-    <section className="auth-section">
+
+<section className="auth-section">
       <div className="container-fluid">
-        <div className="row justify-content-center align-items-center min-vh-100">
+        <div className="row justify-content-center">
           <div className="col-md-6 col-lg-5">
-            <div className="auth-card">
-              <div className="auth-header text-center mb-4">
+            <div className="auth-card" style={{marginTop: '100px'}}>
+              <div className="auth-header text-center mb-3">
                 <i className="fas fa-heart fa-3x text-pink mb-3"></i>
                 <h2>Welcome to <span className="text-pink">Maitri</span></h2>
                 <p className="text-muted">
@@ -190,7 +208,7 @@ const Login = () => {
                 </div>
               </form>
 
-              <div className="divider my-4">
+              <div className="divider my-0">
                 <span className="divider-text">or continue with</span>
               </div>
 
@@ -199,14 +217,14 @@ const Login = () => {
                   <i className="fab fa-google me-2"></i>
                   Continue with Google
                 </button>
-                <button className="btn btn-outline-primary">
+                {/* <button className="btn btn-outline-primary">
                   <i className="fab fa-facebook-f me-2"></i>
                   Continue with Facebook
-                </button>
+                </button> */}
               </div>
 
               {!isLogin && (
-                <div className="mt-4 p-3 bg-light rounded">
+                <div className="mt-3 p-3 bg-light rounded">
                   <h6 className="text-pink">Why join Maitri?</h6>
                   <ul className="list-unstyled small mb-0">
                     <li className="mb-1">
@@ -232,7 +250,7 @@ const Login = () => {
           </div>
           
           <div className="col-md-6 d-none d-md-block">
-            <div className="auth-image-section text-center">
+            <div className="auth-image-section text-center" style={{marginTop: '180px'}}>
               <i className="fas fa-heart-pulse fa-8x text-pink opacity-75 mb-4"></i>
               <h3 className="text-pink mb-3">Your Health, Our Priority</h3>
               <p className="text-muted lead">

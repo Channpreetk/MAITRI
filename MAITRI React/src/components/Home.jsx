@@ -35,13 +35,50 @@ const Home = () => {
       {/* Home Section */}
       <section id="home" className="hero-section">
         <div className="container-fluid">
-          <div className="row align-items-center min-vh-100">
+          <div className="row align-items-center hero-content">
             <div className="col-lg-6">
               <h1 className="display-4 fw-bold mb-4">Welcome to <span className="text-pink">Maitri</span></h1>
               <p className="lead mb-4">Your trusted companion for women's health and wellness. Get personalized diet plans, find doctors, and connect with a supportive community.</p>
-              <div className="d-flex gap-3">
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/chatbot')}>Get Started</button>
-                <button className="btn btn-outline-primary btn-lg" onClick={scrollToFeatures}>Learn More</button>
+              <div className="d-flex gap-3 justify-content-center justify-content-lg-start align-items-center">
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => navigate('/chatbot')}
+                  style={{
+                    width: '140px',
+                    height: '50px',
+                    padding: '10px 20px',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: 'none',
+                    borderRadius: '8px'
+                  }}
+                >
+                  Get Started
+                </button>
+                <button 
+                  className="btn btn-outline-primary" 
+                  onClick={scrollToFeatures}
+                  style={{
+                    width: '140px',
+                    height: '50px',
+                    padding: '10px 20px',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    whiteSpace: 'nowrap',
+                    textAlign: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '8px'
+                  }}
+                >
+                  Learn More
+                </button>
               </div>
             </div>
             <div className="col-lg-6">

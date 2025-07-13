@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { jsPDF } from 'jspdf'
 
 const DietPlanner = () => {
   const [formData, setFormData] = useState({
@@ -15,25 +16,24 @@ const DietPlanner = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const symptoms = [
-    { id: 'headaches', label: 'Frequent Headaches', icon: 'fa-head-side-virus' },
-    { id: 'fatigue', label: 'Fatigue/Low Energy', icon: 'fa-battery-quarter' },
-    { id: 'irregular-periods', label: 'Irregular Periods', icon: 'fa-calendar-times' },
-    { id: 'mood-swings', label: 'Mood Swings', icon: 'fa-emotion' },
-    { id: 'digestive-issues', label: 'Digestive Issues', icon: 'fa-stomach' },
-    { id: 'skin-problems', label: 'Skin Problems', icon: 'fa-spa' },
-    { id: 'sleep-issues', label: 'Sleep Problems', icon: 'fa-bed' },
-    { id: 'stress', label: 'High Stress Levels', icon: 'fa-brain' }
+    { id: 'headaches', label: 'Headaches', icon: 'fa-head-side-virus' },
+    { id: 'fatigue', label: 'Fatigue', icon: 'fa-battery-quarter' },
+    { id: 'period-issues', label: 'Period Issues', icon: 'fa-calendar-alt' },
+    { id: 'mood-swings', label: 'Mood Swings', icon: 'fa-face-frown' },
+    { id: 'digestive', label: 'Digestive Issues', icon: 'fa-pills' },
+    { id: 'skin-problems', label: 'Skin Problems', icon: 'fa-face-sad-tear' },
+    { id: 'sleep-issues', label: 'Sleep Issues', icon: 'fa-bed' },
+    { id: 'stress', label: 'Stress/Anxiety', icon: 'fa-brain' },
+    { id: 'hair-loss', label: 'Hair Loss', icon: 'fa-user-alt-slash' }
   ]
 
   const healthGoals = [
-    { id: 'weight-loss', label: 'Weight Loss', icon: 'fa-weight' },
-    { id: 'weight-gain', label: 'Weight Gain', icon: 'fa-plus-circle' },
-    { id: 'maintain-weight', label: 'Maintain Weight', icon: 'fa-balance-scale' },
-    { id: 'increase-energy', label: 'Increase Energy', icon: 'fa-bolt' },
-    { id: 'better-skin', label: 'Better Skin Health', icon: 'fa-spa' },
-    { id: 'hormonal-balance', label: 'Hormonal Balance', icon: 'fa-yin-yang' },
-    { id: 'digestive-health', label: 'Improve Digestion', icon: 'fa-stomach' },
-    { id: 'general-wellness', label: 'General Wellness', icon: 'fa-heart' }
+    { id: 'weight-loss', label: 'Weight Loss', icon: 'fa-weight-scale' },
+    { id: 'weight-gain', label: 'Weight Gain', icon: 'fa-dumbbell' },
+    { id: 'energy-boost', label: 'Energy Boost', icon: 'fa-bolt' },
+    { id: 'better-skin', label: 'Better Skin', icon: 'fa-face-smile' },
+    { id: 'hormonal-balance', label: 'Hormonal Balance', icon: 'fa-balance-scale' },
+    { id: 'digestive-health', label: 'Digestive Health', icon: 'fa-leaf' }
   ]
 
   const handleInputChange = (e) => {
@@ -159,11 +159,454 @@ const DietPlanner = () => {
     generateDietPlan()
   }
 
+  const downloadPDF = async () => {
+    // Generate automatic filename with timestamp for uniqueness
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')
+    const dateStr = timestamp[0] // YYYY-MM-DD
+    const timeStr = timestamp[1].split('.')[0] // HH-MM-SS
+    const fileName = `Maitri_Diet_Plan_${dateStr}_${timeStr}.pdf`
+
+    // Create a new PDF document
+    const doc = new jsPDF()
+    
+    // Set up fonts and colors
+    const primaryColor = [233, 30, 99] // Pink color for headings
+    const textColor = [44, 62, 80] // Dark text color
+    
+    let yPosition = 20
+    const lineHeight = 6
+    const pageWidth = doc.internal.pageSize.width
+    const leftMargin = 20
+    const rightMargin = 20
+    const contentWidth = pageWidth - leftMargin - rightMargin
+
+    // Helper function to add text with word wrapping
+    const addWrappedText = (text, x, y, maxWidth, fontSize = 10, color = textColor) => {
+      doc.setFontSize(fontSize)
+      doc.setTextColor(...color)
+      const lines = doc.splitTextToSize(text, maxWidth)
+      lines.forEach((line, index) => {
+        if (y + (index * lineHeight) > 280) { // Check if we need a new page
+          doc.addPage()
+          y = 20
+        }
+        doc.text(line, x, y + (index * lineHeight))
+      })
+      return y + (lines.length * lineHeight)
+    }
+
+    // Helper function to add section header
+    const addSectionHeader = (title, y) => {
+      if (y > 270) {
+        doc.addPage()
+        y = 20
+      }
+      doc.setFontSize(14)
+      doc.setTextColor(...primaryColor)
+      doc.setFont(undefined, 'bold')
+      doc.text(title, leftMargin, y)
+      doc.setFont(undefined, 'normal')
+      return y + 10
+    }
+
+    // Title
+    doc.setFontSize(20)
+    doc.setTextColor(...primaryColor)
+    doc.setFont(undefined, 'bold')
+    doc.text('MAITRI PERSONALIZED DIET PLAN', leftMargin, yPosition)
+    yPosition += 15
+
+    // Subtitle
+    doc.setFontSize(12)
+    doc.setTextColor(...textColor)
+    doc.setFont(undefined, 'normal')
+    yPosition = addWrappedText(`Generated on ${new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })}`, leftMargin, yPosition, contentWidth, 12)
+    yPosition += 10
+
+    // Daily Calorie Target
+    yPosition = addSectionHeader('DAILY CALORIE TARGET', yPosition)
+    yPosition = addWrappedText(`${dietPlan.dailyCalories} calories per day`, leftMargin, yPosition, contentWidth, 12, primaryColor)
+    yPosition += 10
+
+    // Personal Information
+    yPosition = addSectionHeader('PERSONAL INFORMATION', yPosition)
+    const personalInfo = [
+      `Age: ${formData.age} years`,
+      `Weight: ${formData.weight} kg`,
+      `Height: ${formData.height} cm`,
+      `Activity Level: ${formData.activityLevel.charAt(0).toUpperCase() + formData.activityLevel.slice(1)}`
+    ]
+    personalInfo.forEach(info => {
+      yPosition = addWrappedText(`• ${info}`, leftMargin, yPosition, contentWidth)
+      yPosition += 2
+    })
+    yPosition += 5
+
+    // Selected Symptoms
+    yPosition = addSectionHeader('SELECTED SYMPTOMS', yPosition)
+    if (formData.symptoms.length > 0) {
+      formData.symptoms.forEach(symptom => {
+        const symptomObj = symptoms.find(s => s.id === symptom)
+        yPosition = addWrappedText(`• ${symptomObj?.label || symptom}`, leftMargin, yPosition, contentWidth)
+        yPosition += 2
+      })
+    } else {
+      yPosition = addWrappedText('• None selected', leftMargin, yPosition, contentWidth)
+    }
+    yPosition += 5
+
+    // Health Goals
+    yPosition = addSectionHeader('HEALTH GOALS', yPosition)
+    if (formData.healthGoals.length > 0) {
+      formData.healthGoals.forEach(goal => {
+        const goalObj = healthGoals.find(g => g.id === goal)
+        yPosition = addWrappedText(`• ${goalObj?.label || goal}`, leftMargin, yPosition, contentWidth)
+        yPosition += 2
+      })
+    } else {
+      yPosition = addWrappedText('• None selected', leftMargin, yPosition, contentWidth)
+    }
+    yPosition += 5
+
+    // Dietary Preferences
+    yPosition = addSectionHeader('DIETARY PREFERENCES', yPosition)
+    yPosition = addWrappedText(`Diet Type: ${formData.dietaryPreferences ? formData.dietaryPreferences.charAt(0).toUpperCase() + formData.dietaryPreferences.slice(1) : 'Not specified'}`, leftMargin, yPosition, contentWidth)
+    yPosition += 2
+    yPosition = addWrappedText(`Allergies/Intolerances: ${formData.allergies || 'None specified'}`, leftMargin, yPosition, contentWidth)
+    yPosition += 10
+
+    // Recommendations
+    yPosition = addSectionHeader('PERSONALIZED RECOMMENDATIONS', yPosition)
+    dietPlan.recommendations.forEach((rec, index) => {
+      yPosition = addWrappedText(`${index + 1}. ${rec.title}`, leftMargin, yPosition, contentWidth, 11, primaryColor)
+      yPosition += 2
+      yPosition = addWrappedText(`   ${rec.description}`, leftMargin, yPosition, contentWidth)
+      yPosition += 5
+    })
+
+    // Sample Meal Plan
+    yPosition = addSectionHeader('SAMPLE MEAL PLAN', yPosition)
+    
+    const mealTypes = [
+      { key: 'breakfast', label: 'BREAKFAST' },
+      { key: 'lunch', label: 'LUNCH' },
+      { key: 'dinner', label: 'DINNER' },
+      { key: 'snacks', label: 'SNACKS' }
+    ]
+
+    mealTypes.forEach(mealType => {
+      yPosition = addWrappedText(mealType.label + ':', leftMargin, yPosition, contentWidth, 11, primaryColor)
+      yPosition += 2
+      dietPlan.mealPlan[mealType.key].forEach(meal => {
+        yPosition = addWrappedText(`• ${meal}`, leftMargin, yPosition, contentWidth)
+        yPosition += 2
+      })
+      yPosition += 3
+    })
+
+    // Recommended Supplements
+    yPosition = addSectionHeader('RECOMMENDED SUPPLEMENTS', yPosition)
+    dietPlan.supplements.forEach((supplement, index) => {
+      yPosition = addWrappedText(`${index + 1}. ${supplement.name}`, leftMargin, yPosition, contentWidth, 11, primaryColor)
+      yPosition += 2
+      yPosition = addWrappedText(`   Dosage: ${supplement.dosage}`, leftMargin, yPosition, contentWidth)
+      yPosition += 2
+      yPosition = addWrappedText(`   Reason: ${supplement.reason}`, leftMargin, yPosition, contentWidth)
+      yPosition += 5
+    })
+
+    // Important Notes
+    yPosition = addSectionHeader('IMPORTANT NOTES', yPosition)
+    const notes = [
+      'This diet plan is generated based on the information you provided',
+      'Please consult with a healthcare professional before making significant dietary changes',
+      'Individual nutritional needs may vary',
+      'Monitor your body\'s response and adjust as needed'
+    ]
+    notes.forEach(note => {
+      yPosition = addWrappedText(`• ${note}`, leftMargin, yPosition, contentWidth)
+      yPosition += 3
+    })
+
+    // Footer
+    if (yPosition > 250) {
+      doc.addPage()
+      yPosition = 20
+    }
+    yPosition += 10
+    doc.setFontSize(10)
+    doc.setTextColor(100, 100, 100)
+    doc.text('Generated by Maitri Health Platform', leftMargin, yPosition)
+    doc.text(`${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`, pageWidth - rightMargin - 30, yPosition)
+
+    // Generate PDF as blob
+    const pdfBlob = doc.output('blob')
+
+    // Try to use File System Access API for choosing location (modern browsers)
+    try {
+      if ('showSaveFilePicker' in window) {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'PDF files',
+              accept: {
+                'application/pdf': ['.pdf'],
+              },
+            },
+          ],
+        })
+        
+        const writable = await fileHandle.createWritable()
+        await writable.write(pdfBlob)
+        await writable.close()
+        
+        alert('Diet plan saved successfully to your chosen location!')
+        return
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error saving file:', error)
+      } else {
+        // User cancelled the save dialog
+        return
+      }
+    }
+
+    // Fallback: Use traditional download method for browsers that don't support File System Access API
+    const url = URL.createObjectURL(pdfBlob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    
+    // Clean up
+    setTimeout(() => {
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }, 100)
+
+    alert('Diet plan downloaded successfully!')
+  }
+
   return (
     <>
+      <style jsx>{`
+        :root {
+          --primary-color: #e91e63;
+          --secondary-color: #f8bbd9;
+          --text-dark: #2c3e50;
+          --text-light: #6c757d;
+          --bg-light: #f8f9fa;
+        }
+
+        .diet-header {
+          background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+          padding: 120px 0 40px;
+          text-align: center;
+        }
+
+        .diet-form-section {
+          background: #f8f9fa;
+          min-height: 80vh;
+        }
+
+        .diet-form-card {
+          background: white;
+          border-radius: 20px;
+          padding: 40px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+          margin-bottom: 40px;
+        }
+
+        .form-header {
+          border-bottom: 2px solid var(--secondary-color);
+          padding-bottom: 20px;
+          margin-bottom: 30px;
+        }
+
+        .form-section {
+          margin-bottom: 40px;
+          padding: 20px;
+          background: #f8f9fa;
+          border-radius: 15px;
+          border-left: 4px solid var(--primary-color);
+        }
+
+        .section-title {
+          color: var(--text-dark);
+          margin-bottom: 20px;
+          font-weight: 600;
+        }
+
+        .symptoms-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .symptom-card {
+          background: white;
+          border: 2px solid #e9ecef;
+          border-radius: 15px;
+          padding: 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+        }
+
+        .symptom-card:hover {
+          border-color: var(--primary-color);
+          transform: translateY(-3px);
+          box-shadow: 0 5px 15px rgba(233, 30, 99, 0.2);
+        }
+
+        .symptom-card.selected {
+          border-color: var(--primary-color);
+          background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+        }
+
+        .symptom-card i {
+          font-size: 2rem;
+          color: var(--primary-color);
+          margin-bottom: 10px;
+          display: block;
+        }
+
+        .symptom-card span {
+          font-weight: 600;
+          color: var(--text-dark);
+          font-size: 0.9rem;
+        }
+
+        .goals-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .goal-card {
+          background: white;
+          border: 2px solid #e9ecef;
+          border-radius: 15px;
+          padding: 20px;
+          text-align: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .goal-card:hover {
+          border-color: var(--primary-color);
+          transform: translateY(-3px);
+          box-shadow: 0 5px 15px rgba(233, 30, 99, 0.2);
+        }
+
+        .goal-card.selected {
+          border-color: var(--primary-color);
+          background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+        }
+
+        .goal-card i {
+          font-size: 1.8rem;
+          color: var(--primary-color);
+          margin-bottom: 8px;
+          display: block;
+        }
+
+        .goal-card span {
+          font-weight: 600;
+          color: var(--text-dark);
+          font-size: 0.9rem;
+        }
+
+        .form-control:focus {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+        }
+
+        .form-select:focus {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 0.2rem rgba(233, 30, 99, 0.25);
+        }
+
+        .text-pink {
+          color: var(--primary-color) !important;
+        }
+
+        .btn-primary {
+          background-color: var(--primary-color) !important;
+          border-color: var(--primary-color) !important;
+          color: white !important;
+          font-weight: 600;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+
+        .btn-primary:hover {
+          background-color: #c2185b !important;
+          border-color: #c2185b !important;
+          color: white !important;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+        }
+
+        @media (max-width: 768px) {
+          .diet-form-card {
+            padding: 20px;
+          }
+          
+          .symptoms-grid {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+          }
+          
+          .goals-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+          
+          .symptom-card, .goal-card {
+            padding: 15px;
+          }
+          
+          .symptom-card i, .goal-card i {
+            font-size: 1.5rem;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .diet-header {
+            padding: 100px 0 60px;
+          }
+          
+          .diet-form-card {
+            padding: 15px;
+          }
+          
+          .form-section {
+            padding: 15px;
+          }
+          
+          .goals-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+        }
+      `}</style>
+
       {/* Header Section */}
       <section className="diet-header">
-        <div className="container-fluid">
+        <div className="container">
           <div className="text-center">
             <h1 className="display-4 fw-bold mb-4">Personalized <span className="text-pink">Diet Planner</span></h1>
             <p className="lead">Get customized nutrition recommendations based on your symptoms and health needs</p>
@@ -173,7 +616,7 @@ const DietPlanner = () => {
 
       {/* Diet Planner Form */}
       <section className="diet-form-section py-5">
-        <div className="container-fluid">
+        <div className="container">
           <div className="row justify-content-center">
             <div className="col-lg-8">
               {!dietPlan ? (
@@ -244,36 +687,64 @@ const DietPlanner = () => {
                             <option value="sedentary">Sedentary (Little/No exercise)</option>
                             <option value="light">Light (1-3 days/week)</option>
                             <option value="moderate">Moderate (3-5 days/week)</option>
-                            <option value="active">Active (6-7 days/week)</option>
+                            <option value="very">Very Active (6-7 days/week)</option>
+                            <option value="extra">Extremely Active (2x/day)</option>
                           </select>
                         </div>
                       </div>
                     </div>
 
-                    {/* Symptoms */}
+                    {/* Current Symptoms */}
                     <div className="form-section">
                       <h5 className="section-title">
-                        <i className="fas fa-stethoscope me-2"></i>Current Symptoms
+                        <i className="fas fa-heartbeat me-2"></i>Current Symptoms
                       </h5>
-                      <p className="text-muted mb-3">Select any symptoms you're currently experiencing</p>
-                      <div className="row">
+                      <p className="text-muted mb-3">Select any symptoms you're currently experiencing:</p>
+                      <div className="symptoms-grid">
                         {symptoms.map(symptom => (
-                          <div key={symptom.id} className="col-md-6 mb-3">
-                            <div className="form-check symptom-check">
-                              <input 
-                                className="form-check-input" 
-                                type="checkbox" 
-                                id={symptom.id}
-                                checked={formData.symptoms.includes(symptom.id)}
-                                onChange={() => handleCheckboxChange('symptoms', symptom.id)}
-                              />
-                              <label className="form-check-label" htmlFor={symptom.id}>
-                                <i className={`fas ${symptom.icon} me-2 text-pink`}></i>
-                                {symptom.label}
-                              </label>
-                            </div>
+                          <div 
+                            key={symptom.id} 
+                            className={`symptom-card ${formData.symptoms.includes(symptom.id) ? 'selected' : ''}`}
+                            onClick={() => handleCheckboxChange('symptoms', symptom.id)}
+                          >
+                            <i className={`fas ${symptom.icon}`}></i>
+                            <span>{symptom.label}</span>
                           </div>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* Dietary Preferences */}
+                    <div className="form-section">
+                      <h5 className="section-title">
+                        <i className="fas fa-leaf me-2"></i>Dietary Preferences
+                      </h5>
+                      <div className="mb-3">
+                        <label htmlFor="dietType" className="form-label">Diet Type</label>
+                        <select 
+                          className="form-select" 
+                          name="dietaryPreferences"
+                          value={formData.dietaryPreferences}
+                          onChange={handleInputChange}
+                        >
+                          <option value="omnivore">Omnivore (No restrictions)</option>
+                          <option value="vegetarian">Vegetarian</option>
+                          <option value="vegan">Vegan</option>
+                          <option value="keto">Keto</option>
+                          <option value="paleo">Paleo</option>
+                          <option value="mediterranean">Mediterranean</option>
+                        </select>
+                      </div>
+                      <div className="mb-3">
+                        <label htmlFor="allergies" className="form-label">Food Allergies/Intolerances</label>
+                        <textarea 
+                          className="form-control" 
+                          name="allergies"
+                          value={formData.allergies}
+                          onChange={handleInputChange}
+                          rows="3" 
+                          placeholder="List any food allergies or intolerances (e.g., nuts, dairy, gluten)"
+                        ></textarea>
                       </div>
                     </div>
 
@@ -282,59 +753,17 @@ const DietPlanner = () => {
                       <h5 className="section-title">
                         <i className="fas fa-target me-2"></i>Health Goals
                       </h5>
-                      <p className="text-muted mb-3">What are your primary health goals?</p>
-                      <div className="row">
+                      <div className="goals-grid">
                         {healthGoals.map(goal => (
-                          <div key={goal.id} className="col-md-6 mb-3">
-                            <div className="form-check goal-check">
-                              <input 
-                                className="form-check-input" 
-                                type="checkbox" 
-                                id={goal.id}
-                                checked={formData.healthGoals.includes(goal.id)}
-                                onChange={() => handleCheckboxChange('healthGoals', goal.id)}
-                              />
-                              <label className="form-check-label" htmlFor={goal.id}>
-                                <i className={`fas ${goal.icon} me-2 text-pink`}></i>
-                                {goal.label}
-                              </label>
-                            </div>
+                          <div 
+                            key={goal.id} 
+                            className={`goal-card ${formData.healthGoals.includes(goal.id) ? 'selected' : ''}`}
+                            onClick={() => handleCheckboxChange('healthGoals', goal.id)}
+                          >
+                            <i className={`fas ${goal.icon}`}></i>
+                            <span>{goal.label}</span>
                           </div>
                         ))}
-                      </div>
-                    </div>
-
-                    {/* Additional Information */}
-                    <div className="form-section">
-                      <h5 className="section-title">
-                        <i className="fas fa-info-circle me-2"></i>Additional Information
-                      </h5>
-                      <div className="mb-3">
-                        <label htmlFor="allergies" className="form-label">Allergies or Food Intolerances</label>
-                        <textarea 
-                          className="form-control" 
-                          name="allergies"
-                          value={formData.allergies}
-                          onChange={handleInputChange}
-                          rows="3" 
-                          placeholder="e.g., nuts, dairy, gluten..."
-                        ></textarea>
-                      </div>
-                      <div className="mb-3">
-                        <label htmlFor="dietaryPreferences" className="form-label">Dietary Preferences</label>
-                        <select 
-                          className="form-select" 
-                          name="dietaryPreferences"
-                          value={formData.dietaryPreferences}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">No specific preference</option>
-                          <option value="vegetarian">Vegetarian</option>
-                          <option value="vegan">Vegan</option>
-                          <option value="pescatarian">Pescatarian</option>
-                          <option value="keto">Keto</option>
-                          <option value="paleo">Paleo</option>
-                        </select>
                       </div>
                     </div>
 
@@ -435,7 +864,7 @@ const DietPlanner = () => {
                       <i className="fas fa-arrow-left me-2"></i>
                       Create New Plan
                     </button>
-                    <button className="btn btn-primary">
+                    <button className="btn btn-primary" onClick={downloadPDF}>
                       <i className="fas fa-download me-2"></i>
                       Download Plan
                     </button>
