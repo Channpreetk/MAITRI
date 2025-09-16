@@ -1,19 +1,23 @@
+// Import React hooks and components needed for chatbot
 import { useState, useEffect, useRef } from 'react'
 import { useUser } from '../context/UserContext'
+import ReactMarkdown from 'react-markdown'
+import './Chatbot.css'
 
 const Chatbot = () => {
   const { user } = useUser()
+  // Initialize chat with welcome message from Maitri
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: "Hi there! I'm Maitri, your personal wellness companion. 🌸\n\nI'm here to help you with:\n• Health and wellness advice\n• Symptom guidance\n• Nutrition recommendations\n• Mental health support\n\nHow can I assist you today?",
+      text: "Hi there! I'm Maitri, your compassionate AI health companion. 🌸\n\nI'm here to support you through your wellness journey with:\n• Personalized health guidance\n• Women's health expertise\n• Emotional support and understanding\n• Evidence-based wellness advice\n\nHow can I help you feel your best today?",
       sender: 'bot',
       timestamp: new Date()
     }
   ])
   const [inputMessage, setInputMessage] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const messagesEndRef = useRef(null)
+  const [isTyping, setIsTyping] = useState(false) // Show typing indicator
+  const messagesEndRef = useRef(null) // Reference for auto-scrolling to latest message
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -26,54 +30,110 @@ const Chatbot = () => {
     }
   }, [messages])
 
-  const generateAIResponse = (userMessage) => {
+  // New AI-powered response function
+  const getAIResponse = async (userMessage) => {
+    try {
+      const response = await fetch('http://localhost:8080/api/chat/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          userId: user?.email || 'anonymous',
+          timestamp: Date.now()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      return data.message
+    } catch (error) {
+      console.error('Error getting AI response:', error)
+      return "Hi! I'm having some connectivity issues, but I'm still here to help with wellness guidance! What's on your mind?"
+    }
+  }
+
+  // Fallback responses for when AI is unavailable
+  const generateFallbackResponse = (userMessage) => {
     const responses = {
-      'period': [
-        "During your menstrual cycle, it's important to stay hydrated and eat iron-rich foods like spinach, lentils, and lean meats. Heat therapy and gentle exercise can help with cramps. 🌸",
-        "Period pain is normal, but severe pain isn't. Try yoga, warm baths, and anti-inflammatory foods. If pain is severe, please consult a healthcare provider.",
-        "Your period health is important! Track your cycle, eat balanced meals, and don't hesitate to reach out if you notice unusual changes."
+      'greeting': [
+        "Hi there! 😊 How are you feeling today?",
+        "Hello! I'm here to help with any health questions you have.",
+        "Hey! What's on your mind today?",
+        "Hi! How can I support your wellness today?"
       ],
       'headache': [
-        "For headaches, try staying hydrated, getting enough sleep, and reducing screen time. Peppermint tea and gentle neck stretches can help. If headaches persist, please see a doctor.",
-        "Headaches can be caused by stress, dehydration, or hormonal changes. Try relaxation techniques, ensure you're eating regularly, and consider keeping a headache diary.",
-        "Immediate relief: drink water, rest in a dark room, and try a cold compress. For prevention, maintain regular sleep and meal schedules."
+        "For headache relief, try these steps immediately: 1) Drink a full glass of water, 2) Apply a cold compress to your forehead or warm compress to neck, 3) Rest in a quiet, dark room, 4) Gently massage your temples. This could be from dehydration, stress, eye strain, or hormonal changes. If headaches are severe, frequent, or accompanied by vision changes, see a doctor within 24 hours."
       ],
-      'food': [
-        "Great question about nutrition! Focus on whole foods: leafy greens, fruits, lean proteins, and whole grains. Foods rich in iron, calcium, and omega-3s are especially important for women.",
-        "For balanced nutrition, try to include: colorful vegetables, fruits, nuts, seeds, and lean proteins. Limit processed foods and stay hydrated with plenty of water.",
-        "Healthy eating tip: Aim for variety in your meals. Include foods rich in folate (leafy greens), calcium (dairy/alternatives), and iron (beans, meat, fortified cereals)."
+      'period': [
+        "For period pain relief: 1) Apply heat (heating pad or warm bath), 2) Try gentle yoga or light stretching, 3) Stay hydrated, 4) Consider anti-inflammatory medication if you normally take it. Period pain happens due to uterine contractions from hormone changes. See a doctor if pain is severe enough to interfere with daily activities or if you experience heavy bleeding with large clots."
+      ],
+      'stomach': [
+        "For stomach discomfort: 1) Sip on ginger tea or chew fresh ginger, 2) Try peppermint tea, 3) Eat small, bland foods like crackers or toast, 4) Avoid lying down immediately after eating. This could be from stress, food sensitivity, hormonal changes, or eating too quickly. Consult a doctor if you have persistent pain, vomiting, or symptoms lasting more than 48 hours."
       ],
       'stress': [
-        "Stress management is crucial for overall health. Try deep breathing exercises, meditation, or gentle yoga. Regular exercise and adequate sleep also help manage stress levels.",
-        "I understand stress can be overwhelming. Consider talking to someone you trust, practicing mindfulness, or trying creative activities. Remember, it's okay to ask for help.",
-        "Stress relief techniques: take short walks, practice gratitude, listen to calming music, or try progressive muscle relaxation. Small steps make a big difference!"
+        "For immediate stress relief: 1) Try the 4-7-8 breathing technique (inhale for 4, hold for 7, exhale for 8), 2) Practice grounding - name 5 things you can see, 4 you can touch, 3 you can hear, 3) Step outside for fresh air if possible, 4) Do gentle stretching. Stress affects your body through hormone release. If anxiety is interfering with sleep, work, or daily life, consider speaking with a counselor or doctor."
+      ],
+      'fatigue': [
+        "For fatigue relief: 1) Ensure you're drinking enough water, 2) Try a 10-15 minute walk in natural light, 3) Eat a balanced snack with protein and complex carbs, 4) Check if you're getting 7-9 hours of sleep. Fatigue can result from iron deficiency, hormonal changes, stress, or poor sleep quality. See a doctor if fatigue persists despite adequate rest or if it's accompanied by other concerning symptoms."
+      ],
+      'sleep': [
+        "For better sleep tonight: 1) Keep room cool and dark, 2) Try progressive muscle relaxation, 3) Avoid screens 1 hour before bed, 4) Consider chamomile tea or magnesium supplement if you normally take them. Sleep issues often relate to stress, hormonal fluctuations, or irregular schedules. If sleep problems persist for more than 2 weeks, discuss with a healthcare provider."
+      ],
+      'pain': [
+        "For general pain management: 1) Apply appropriate heat or cold therapy, 2) Try gentle movement or stretching, 3) Stay hydrated, 4) Practice relaxation techniques. Pain can have many causes including muscle tension, inflammation, or stress. If pain is severe, sudden, or doesn't improve with basic care, please see a healthcare provider promptly."
+      ],
+      'food': [
+        "Focus on colorful fruits, leafy greens, lean proteins, and whole grains. Iron, calcium, and omega-3s are especially important for women! 🥗",
+        "Healthy eating tip: Include variety, stay hydrated, and don't skip meals. Your body will thank you!"
+      ],
+      'thanks': [
+        "You're so welcome! I'm always here when you need me. 😊",
+        "Happy to help! Take care of yourself! 💕",
+        "Anytime! Your health and happiness matter. ✨"
       ],
       'default': [
-        "Thank you for sharing that with me. As your wellness companion, I'm here to provide general health information. For specific medical concerns, please consult with a healthcare professional.",
-        "I'm here to support your wellness journey! Could you tell me more about what you're experiencing? I can provide general guidance on nutrition, lifestyle, and wellness.",
-        "Every woman's health journey is unique. I'm here to provide supportive information and general wellness tips. What specific area would you like to focus on today?",
-        "I understand you're looking for guidance. I can help with general wellness, nutrition tips, stress management, and lifestyle advice. What would be most helpful for you right now?"
+        "I'm here to help with your wellness journey! What would you like to know about?",
+        "Tell me more about what you're experiencing. I can provide general health guidance and support.",
+        "I'm listening! How can I support your health and wellness today?"
       ]
     }
 
     const lowerMessage = userMessage.toLowerCase()
     let category = 'default'
     
-    if (lowerMessage.includes('period') || lowerMessage.includes('menstrual') || lowerMessage.includes('cycle')) {
-      category = 'period'
-    } else if (lowerMessage.includes('headache') || lowerMessage.includes('head') || lowerMessage.includes('pain')) {
+    // Check for greetings
+    if (lowerMessage.match(/^(hi|hello|hey|good morning|good afternoon|good evening)$/)) {
+      category = 'greeting'
+    } else if (lowerMessage.includes('thank') || lowerMessage.includes('thanks')) {
+      category = 'thanks'
+    } else if (lowerMessage.includes('headache') || lowerMessage.includes('migraine') || lowerMessage.includes('head pain')) {
       category = 'headache'
+    } else if (lowerMessage.includes('period') || lowerMessage.includes('menstrual') || lowerMessage.includes('cramp') || lowerMessage.includes('pms')) {
+      category = 'period'
+    } else if (lowerMessage.includes('stomach') || lowerMessage.includes('nausea') || lowerMessage.includes('digestive') || lowerMessage.includes('bloating')) {
+      category = 'stomach'
+    } else if (lowerMessage.includes('tired') || lowerMessage.includes('fatigue') || lowerMessage.includes('exhausted') || lowerMessage.includes('energy')) {
+      category = 'fatigue'
+    } else if (lowerMessage.includes('sleep') || lowerMessage.includes('insomnia') || lowerMessage.includes("can't sleep")) {
+      category = 'sleep'
+    } else if (lowerMessage.includes('stress') || lowerMessage.includes('anxious') || lowerMessage.includes('worried') || lowerMessage.includes('overwhelmed') || lowerMessage.includes('panic')) {
+      category = 'stress'
+    } else if (lowerMessage.includes('pain') || lowerMessage.includes('hurt') || lowerMessage.includes('ache')) {
+      category = 'pain'
     } else if (lowerMessage.includes('food') || lowerMessage.includes('eat') || lowerMessage.includes('nutrition') || lowerMessage.includes('diet')) {
       category = 'food'
-    } else if (lowerMessage.includes('stress') || lowerMessage.includes('anxious') || lowerMessage.includes('worried') || lowerMessage.includes('overwhelmed')) {
-      category = 'stress'
     }
 
     const categoryResponses = responses[category]
     return categoryResponses[Math.floor(Math.random() * categoryResponses.length)]
   }
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputMessage.trim() === '') return
 
     const userMessage = {
@@ -84,20 +144,40 @@ const Chatbot = () => {
     }
 
     setMessages(prev => [...prev, userMessage])
+    const currentMessage = inputMessage
     setInputMessage('')
     setIsTyping(true)
 
-    // Simulate AI response delay
-    setTimeout(() => {
+    try {
+      // Try to get AI response first
+      let aiResponse = await getAIResponse(currentMessage)
+      
+      // If AI response fails or is empty, use fallback
+      if (!aiResponse || aiResponse.trim() === '') {
+        aiResponse = generateFallbackResponse(currentMessage)
+      }
+
       const botResponse = {
         id: messages.length + 2,
-        text: generateAIResponse(inputMessage),
+        text: aiResponse,
+        sender: 'bot',
+        timestamp: new Date()
+      }
+      
+      setMessages(prev => [...prev, botResponse])
+    } catch (error) {
+      console.error('Error in sendMessage:', error)
+      // Use fallback response on error
+      const botResponse = {
+        id: messages.length + 2,
+        text: generateFallbackResponse(currentMessage),
         sender: 'bot',
         timestamp: new Date()
       }
       setMessages(prev => [...prev, botResponse])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const sendQuickMessage = (message) => {
@@ -129,10 +209,11 @@ const Chatbot = () => {
         <div className="col-md-3 chat-sidebar" style={{backgroundColor: '#ffc0cb', padding: '20px', margin: 0}}>
           <div className="sidebar-header">
             <div className="ai-avatar">
-              <i className="fas fa-robot fa-2x text-pink"></i>
+              <i className="fas fa-heart fa-2x text-pink"></i>
             </div>
             <h5>Maitri</h5>
-            <p className="text-muted">Your AI Wellness Companion</p>
+            <p className="text-muted">Your Compassionate AI Health Companion</p>
+            <small className="text-muted">Powered by AI • Always here to listen</small>
           </div>
           
           <div className="quick-actions">
@@ -140,21 +221,21 @@ const Chatbot = () => {
             <div className="action-buttons">
               <button 
                 className="btn btn-outline-primary btn-sm mb-2 w-100" 
-                onClick={() => sendQuickMessage('Tell me about period health')}
+                onClick={() => sendQuickMessage('I need guidance about my menstrual health and cycle tracking')}
               >
-                <i className="fas fa-calendar-alt me-2"></i>Period Health
+                <i className="fas fa-calendar-alt me-2"></i>Menstrual Health
               </button>
               <button 
                 className="btn btn-outline-primary btn-sm mb-2 w-100" 
-                onClick={() => sendQuickMessage('I have a headache, what should I do?')}
+                onClick={() => sendQuickMessage('I am feeling stressed and overwhelmed. Can you help me?')}
               >
-                <i className="fas fa-head-side-virus me-2"></i>Headache Relief
+                <i className="fas fa-heart me-2"></i>Emotional Support
               </button>
               <button 
                 className="btn btn-outline-primary btn-sm mb-2 w-100" 
-                onClick={() => sendQuickMessage('Suggest some healthy foods')}
+                onClick={() => sendQuickMessage('What are some healthy nutrition tips for women my age?')}
               >
-                <i className="fas fa-apple-alt me-2"></i>Nutrition Tips
+                <i className="fas fa-apple-alt me-2"></i>Nutrition Guidance
               </button>
               <button 
                 className="btn btn-outline-primary btn-sm mb-2 w-100" 
@@ -224,9 +305,18 @@ const Chatbot = () => {
                 </div>
                 <div className="message-content">
                   <div className="message-bubble">
-                    {message.text.split('\n').map((line, index) => (
-                      <div key={index}>{line}</div>
-                    ))}
+                    <ReactMarkdown
+                      components={{
+                        // Custom styling for markdown elements
+                        p: ({children}) => <div style={{margin: '0 0 8px 0'}}>{children}</div>,
+                        strong: ({children}) => <strong style={{fontWeight: 'bold', color: '#c2185b'}}>{children}</strong>,
+                        em: ({children}) => <em style={{fontStyle: 'italic'}}>{children}</em>,
+                        ul: ({children}) => <ul style={{marginLeft: '16px', marginBottom: '8px'}}>{children}</ul>,
+                        li: ({children}) => <li style={{marginBottom: '4px'}}>{children}</li>
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
                   </div>
                   <span className="message-time">
                     {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}

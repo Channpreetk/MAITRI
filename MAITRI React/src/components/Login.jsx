@@ -4,7 +4,7 @@ import { useUser } from '../context/UserContext'
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login, signup } = useUser()
+  const { login, signup, loading, checkEmailExists } = useUser()
   const [isLogin, setIsLogin] = useState(true)
   const [formData, setFormData] = useState({
     email: '',
@@ -14,6 +14,9 @@ const Login = () => {
     age: '',
     agreeToTerms: false
   })
+  const [errors, setErrors] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] =useState('')
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -21,38 +24,119 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }))
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
   }
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const newErrors = {}
+
+    // Email validation
+    if (!formData.email) {
+      newErrors.email = 'Email is required'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email'
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = 'Password is required'
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters'
+    }
+
+    // Registration-specific validations
+    if (!isLogin) {
+      if (!formData.name) {
+        newErrors.name = 'Name is required'
+      }
+
+      if (!formData.confirmPassword) {
+        newErrors.confirmPassword = 'Please confirm your password'
+      } else if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match'
+      }
+
+      if (!formData.age) {
+        newErrors.age = 'Age is required'
+      } else if (isNaN(formData.age) || formData.age < 1 || formData.age > 120) {
+        newErrors.age = 'Please enter a valid age (1-120)'
+      }
+
+      if (!formData.agreeToTerms) {
+        newErrors.agreeToTerms = 'You must agree to the terms and conditions'
+      }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (isLogin) {
-      // Login logic
-      if (formData.email && formData.password) {
-        // In a real app, you would validate credentials with a backend
-        const userData = {
-          email: formData.email,
-          name: 'User', // In real app, this would come from backend
-          id: Date.now() // Simple ID generation
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      if (isLogin) {
+        // Login logic
+        const result = await login(formData.email, formData.password)
+        
+        if (result.success) {
+          setSuccessMessage('Welcome back to Maintri!')
+          setTimeout(() => navigate('/home'),1500) // Navigate after 1.5 seconds
+        } else {
+          setErrors({ general: result.error || 'Login failed. Please check your credentials.' })
         }
-        login(userData)
-        alert('Login successful! Welcome back to Maitri.')
-        navigate('/home')
-      }
-    } else {
-      // Registration logic
-      if (formData.email && formData.password && formData.name && 
-          formData.password === formData.confirmPassword && formData.agreeToTerms) {
-        const userData = {
-          email: formData.email,
-          name: formData.name,
-          age: formData.age,
-          id: Date.now(),
-          joinedDate: new Date().toISOString()
+      } else {
+        // Registration logic
+        try {
+          // Check if email already exists before signup
+          const emailCheck = await checkEmailExists(formData.email)
+          if (emailCheck.exists) {
+            setErrors({ email: 'This email is already registered. Please use a different email or try logging in.' })
+            setIsSubmitting(false)
+            return
+          }
+        } catch (emailCheckError) {
+          console.error('Email check failed:', emailCheckError)
+          // Continue with registration even if email check fails
         }
-        signup(userData)
-        alert(`Registration successful! Welcome to Maitri, ${formData.name}!`)
-        navigate('/home')
+
+        const signupData = {
+          fullName: formData.name,  // Changed from 'name' to 'fullName'
+          email: formData.email,
+          password: formData.password,
+          age: parseInt(formData.age)
+        }
+
+        console.log('Attempting signup with data:', signupData)
+        const result = await signup(signupData)
+        console.log('Signup result:', result)
+        
+        if (result.success) {
+          setSuccessMessage(`Welcome to Maitri, ${formData.name}!`)
+          setTimeout(() => navigate('/home'),1500)
+        } else {
+          setErrors({ general: result.error || 'Registration failed. Please try again.' })
+        }
       }
+    } catch (error) {
+      console.error('Authentication error:', error)
+      setErrors({ 
+        general: `Error: ${error.message || 'Something went wrong. Please try again.'}` 
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -66,6 +150,8 @@ const Login = () => {
       age: '',
       agreeToTerms: false
     })
+    setErrors({}) // Clear errors when switching modes
+    setSuccessMessage('')
   }
 
   return (
@@ -84,18 +170,32 @@ const Login = () => {
               </div>
 
               <form onSubmit={handleSubmit}>
+                {successMessage && (
+                  <div className = "alert alert-success" role = "alert">
+                    {successMessage}
+                  </div>
+                )}
+
+                {/* General error message */}
+                {errors.general && (
+                  <div className="alert alert-danger" role="alert">
+                    {errors.general}
+                  </div>
+                )}
+
                 {!isLogin && (
                   <div className="mb-3">
                     <label htmlFor="name" className="form-label">Full Name</label>
                     <input
                       type="text"
-                      className="form-control"
+                      className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="Enter your full name"
                       required={!isLogin}
                     />
+                    {errors.name && <div className="invalid-feedback">{errors.name}</div>}
                   </div>
                 )}
 
@@ -103,13 +203,14 @@ const Login = () => {
                   <label htmlFor="email" className="form-label">Email Address</label>
                   <input
                     type="email"
-                    className="form-control"
+                    className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
                     required
                   />
+                  {errors.email && <div className="invalid-feedback">{errors.email}</div>}
                 </div>
 
                 {!isLogin && (
@@ -117,7 +218,7 @@ const Login = () => {
                     <label htmlFor="age" className="form-label">Age</label>
                     <input
                       type="number"
-                      className="form-control"
+                      className={`form-control ${errors.age ? 'is-invalid' : ''}`}
                       name="age"
                       value={formData.age}
                       onChange={handleInputChange}
@@ -125,6 +226,7 @@ const Login = () => {
                       min="13"
                       max="100"
                     />
+                    {errors.age && <div className="invalid-feedback">{errors.age}</div>}
                   </div>
                 )}
 
@@ -132,13 +234,14 @@ const Login = () => {
                   <label htmlFor="password" className="form-label">Password</label>
                   <input
                     type="password"
-                    className="form-control"
+                    className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
                     placeholder="Enter your password"
                     required
                   />
+                  {errors.password && <div className="invalid-feedback">{errors.password}</div>}
                 </div>
 
                 {!isLogin && (
@@ -146,16 +249,14 @@ const Login = () => {
                     <label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
                     <input
                       type="password"
-                      className="form-control"
+                      className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       placeholder="Confirm your password"
                       required={!isLogin}
                     />
-                    {formData.password !== formData.confirmPassword && formData.confirmPassword && (
-                      <small className="text-danger">Passwords do not match</small>
-                    )}
+                    {errors.confirmPassword && <div className="invalid-feedback">{errors.confirmPassword}</div>}
                   </div>
                 )}
 
@@ -175,7 +276,7 @@ const Login = () => {
                   <div className="mb-3">
                     <div className="form-check">
                       <input
-                        className="form-check-input"
+                        className={`form-check-input ${errors.agreeToTerms ? 'is-invalid' : ''}`}
                         type="checkbox"
                         name="agreeToTerms"
                         checked={formData.agreeToTerms}
@@ -186,12 +287,24 @@ const Login = () => {
                         I agree to the <a href="#" className="text-pink">Terms of Service</a> and{' '}
                         <a href="#" className="text-pink">Privacy Policy</a>
                       </label>
+                      {errors.agreeToTerms && <div className="invalid-feedback d-block">{errors.agreeToTerms}</div>}
                     </div>
                   </div>
                 )}
 
-                <button type="submit" className="btn btn-primary w-100 mb-3">
-                  {isLogin ? 'Sign In' : 'Create Account'}
+                <button 
+                  type="submit" 
+                  className="btn btn-primary w-100 mb-3"
+                  disabled={isSubmitting || loading}
+                >
+                  {isSubmitting || loading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      {isLogin ? 'Signing In...' : 'Creating Account...'}
+                    </>
+                  ) : (
+                    isLogin ? 'Sign In' : 'Create Account'
+                  )}
                 </button>
 
                 <div className="text-center">

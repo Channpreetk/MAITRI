@@ -4,8 +4,8 @@ const Community = () => {
   const [posts, setPosts] = useState([
     {
       id: 1,
-      author: 'Priya S.',
-      avatar: 'PS',
+      author: 'Meera S.',
+      avatar: 'MS',
       time: '2 hours ago',
       category: 'Home Remedies',
       title: 'Natural remedy for period cramps that actually works!',

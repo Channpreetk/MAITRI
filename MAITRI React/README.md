@@ -4,8 +4,8 @@ Maitri is a comprehensive healthcare platform designed specifically for women. I
 
 ## Features
 
-### 🤖 AI Assistant - Priya
-- 24/7 AI health companion named Priya
+### 🤖 AI Assistant - Maitri
+- 24/7 AI health companion named Maitri
 - Provides guidance on women's health issues
 - Answers questions about symptoms, nutrition, and wellness
 - Interactive chat interface with quick action buttons

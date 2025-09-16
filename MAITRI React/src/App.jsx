@@ -1,9 +1,10 @@
+// Import React Router and styling libraries
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 import './App.css'
 
-// Import components
+// Import all page components
 import HomeNavbar from './components/HomeNavbar'
 import NavigationNavbar from './components/NavigationNavbar'
 import Home from './components/Home'
@@ -12,23 +13,31 @@ import DietPlanner from './components/DietPlanner'
 import Doctors from './components/Doctors'
 import Community from './components/Community'
 import Login from './components/Login'
+import NotFound from './components/NotFound'
 import Footer from './components/Footer'
+import ApiTest from './components/ApiTest'
 
-// Import UserContext
+// Import user context to track logged in user
 import { UserProvider } from './context/UserContext'
 
 function AppContent() {
   const location = useLocation()
   const hiddenFooterRoutes = ['/chatbot']
-  const shouldHideFooter = hiddenFooterRoutes.includes(location.pathname)
   
-  // Use HomeNavbar for home page, NavigationNavbar for all other pages
+  // Check if current path matches any defined routes
+  const definedRoutes = ['/', '/home', '/chatbot', '/diet-planner', '/doctors', '/community', '/login', '/api-test']
+  const is404Page = !definedRoutes.includes(location.pathname)
+  
+  const shouldHideFooter = hiddenFooterRoutes.includes(location.pathname) || is404Page
+  
+  // Show different navbars based on current page
   const isHomePage = location.pathname === '/' || location.pathname === '/home'
 
   return (
     <div className="App">
-      {isHomePage ? <HomeNavbar /> : <NavigationNavbar />}
+      {!is404Page && (isHomePage ? <HomeNavbar /> : <NavigationNavbar />)}
       <Routes>
+        {/* Define all application routes */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/chatbot" element={<Chatbot />} />
@@ -36,6 +45,9 @@ function AppContent() {
         <Route path="/doctors" element={<Doctors />} />
         <Route path="/community" element={<Community />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/api-test" element={<ApiTest />} />
+        {/* Catch all undefined routes and show 404 page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!shouldHideFooter && <Footer />}
     </div>

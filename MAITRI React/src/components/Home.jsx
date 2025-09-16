@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import AICharacter from './AICharacter'
 
 const Home = () => {
   const navigate = useNavigate()
@@ -82,78 +83,8 @@ const Home = () => {
               </div>
             </div>
             <div className="col-lg-6">
-              {/* Girl Character Section */}
-              <div className="girl-character-container">
-                {/* Cloud Navigation */}
-                <div className="cloud-navigation">
-                  <div className="cloud-item" data-page="chatbot" onClick={() => navigate('/chatbot')}>
-                    <div className="cloud">
-                      <i className="fas fa-robot"></i>
-                      <span>AI Assistant</span>
-                    </div>
-                  </div>
-                  <div className="cloud-item" data-page="diet-planner" onClick={() => navigate('/diet-planner')}>
-                    <div className="cloud">
-                      <i className="fas fa-utensils"></i>
-                      <span>Diet Planner</span>
-                    </div>
-                  </div>
-                  <div className="cloud-item" data-page="doctors" onClick={() => navigate('/doctors')}>
-                    <div className="cloud">
-                      <i className="fas fa-user-md"></i>
-                      <span>Find Doctors</span>
-                    </div>
-                  </div>
-                  <div className="cloud-item" data-page="community" onClick={() => navigate('/community')}>
-                    <div className="cloud">
-                      <i className="fas fa-users"></i>
-                      <span>Community</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Girl Character */}
-                <div className="girl-character">
-                  <div className="girl-body">
-                    {/* Head */}
-                    <div className="head">
-                      <div className="hair"></div>
-                      <div className="face">
-                        <div className="eyes">
-                          <div className="eye left"></div>
-                          <div className="eye right"></div>
-                        </div>
-                        <div className="nose"></div>
-                        <div className="mouth"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Body */}
-                    <div className="torso">
-                      <div className="neck"></div>
-                      <div className="shoulders"></div>
-                      <div className="chest"></div>
-                    </div>
-                    
-                    {/* Arms */}
-                    <div className="arms">
-                      <div className="arm left-arm">
-                        <div className="upper-arm"></div>
-                        <div className="forearm"></div>
-                        <div className="hand waving-hand">👋</div>
-                      </div>
-                      <div className="arm right-arm">
-                        <div className="upper-arm"></div>
-                        <div className="forearm"></div>
-                        <div className="hand">✋</div>
-                      </div>
-                    </div>
-                    
-                    {/* Waist */}
-                    <div className="waist"></div>
-                  </div>
-                </div>
-              </div>
+              {/* AI Character Section */}
+              <AICharacter />
             </div>
           </div>
         </div>
@@ -167,8 +98,8 @@ const Home = () => {
             <div className="col-md-6 col-lg-3">
               <div className="feature-card text-center p-4" onClick={() => navigate('/chatbot')}>
                 <i className="fas fa-robot fa-3x text-pink mb-3"></i>
-                <h5>AI Assistant - Priya</h5>
-                <p>Chat with Priya, your AI wellness companion for guidance and support</p>
+                <h5>AI Assistant - Maitri</h5>
+                <p>Chat with Maitri, your AI wellness companion for guidance and support</p>
               </div>
             </div>
             <div className="col-md-6 col-lg-3">
